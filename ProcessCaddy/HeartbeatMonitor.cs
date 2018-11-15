@@ -125,6 +125,10 @@ namespace ProcessCaddy
 						m_pidsToValidate.Add(pid);
 					}
 				}
+                else if(msg == "InLobby")
+                {
+                    m_processManager.CheckSchedule();
+                }
 
 			}
 			catch (System.Exception e)

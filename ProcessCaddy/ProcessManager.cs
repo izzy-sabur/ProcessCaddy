@@ -21,6 +21,7 @@ namespace ProcessCaddy
 			public string name;
 			public string exec;
 			public string args;
+            public Database.ScheduleInfo sched;
 			public bool restartOnExit;
 		}
 
@@ -31,7 +32,7 @@ namespace ProcessCaddy
 		}
 
 		List<ProcessEntry> m_processList = new List<ProcessEntry>();
-
+        int m_curProcessIndex;
 		public ProcessManager()
 		{
 			m_heartbeatMonitor = new HeartbeatMonitor(this);
@@ -73,7 +74,7 @@ namespace ProcessCaddy
 
 			foreach (Database.Entry entry in m_database.Entries)
 			{
-				AddProcess(entry.name, entry.exec, entry.args);
+				AddProcess(entry.name, entry.exec, entry.args, entry.sched);
 			}
 
 			m_onEvent?.Invoke("ConfigLoaded");
@@ -89,6 +90,7 @@ namespace ProcessCaddy
 		public void Update()
 		{
 			m_heartbeatMonitor.Update();
+
 		}
 
 		public Database.Entry GetEntryAtIndex(int index)
@@ -101,13 +103,14 @@ namespace ProcessCaddy
 			return m_database.Entries[index];
 		}
 
-		public int AddProcess(string name, string exec, string args)
+		public int AddProcess(string name, string exec, string args, Database.ScheduleInfo sched)
 		{
 			ProcessEntry entry = new ProcessEntry();
 
 			entry.name = name;
 			entry.exec = exec;
 			entry.args = args;
+            entry.sched = sched;
 
 			m_processList.Add(entry);
 
@@ -243,10 +246,25 @@ namespace ProcessCaddy
 
 		public void StartAll()
 		{
-			for (int i = 0; i < m_processList.Count; i++)
-			{
-				Start(i);
-			}
+            //TESTCODE
+
+            // find the process that should be starting now
+            int currentTime = GetCurTime();
+
+            for(int i = 0; i < m_processList.Count; i++)
+            {
+                if((m_processList[i].sched.startTime < currentTime) && (m_processList[i].sched.endTime > currentTime))
+                {
+                    Start(i);
+                    m_curProcessIndex = i;
+                    break;
+                }
+            }
+
+			//for (int i = 0; i < m_processList.Count; i++)
+			//{
+			//	Start(i);
+			//}
 		}
 
 		public void StopAll()
@@ -298,7 +316,25 @@ namespace ProcessCaddy
 			}
 		}
 
+        public void CheckSchedule()
+        {
+            int currentTime = GetCurTime();
 
+            if ((m_processList[m_curProcessIndex].sched.startTime > currentTime) || (m_processList[m_curProcessIndex].sched.endTime < currentTime))
+            {
+                Stop(m_curProcessIndex);
+
+                for (int i = 0; i < m_processList.Count; i++)
+                {
+                    if ((m_processList[i].sched.startTime < currentTime) && (m_processList[i].sched.endTime > currentTime))
+                    {
+                        Start(i);
+                        m_curProcessIndex = i;
+                        break;
+                    }
+                }
+            }
+        }
 		#endregion
 
 		void OnProcessStarted(ProcessManager.ProcessEntry entry)
@@ -330,6 +366,10 @@ namespace ProcessCaddy
 			}
 		}
 
+        int GetCurTime()
+        {
+            return System.DateTime.Now.Second;
+        }
 	}
 
 }

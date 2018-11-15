@@ -51,19 +51,20 @@ namespace ProcessCaddy
 
 		private void SizeLastColumn(ListView lv)
 		{
-			if ( lv.Columns.Count < 2 )
+			if ( lv.Columns.Count < 3 )
 			{
 				return;
 			}
 
 			int x = ( ( lv.Width / 3 ) == 0 ) ? 1 : ( lv.Width / 3 );
-			lv.Columns[1].Width = ( x * 3 );
+			lv.Columns[2].Width = ( x * 3 );
 		}
 
 		private void Form1_Load(object sender, EventArgs e)
 		{
 			listView1.Columns.Add( "Name", 300 );
-			listView1.Columns.Add( "Status", 200 );
+            listView1.Columns.Add( "Start Time (24h)", 200);
+            listView1.Columns.Add( "Status", 200 );
 			m_processManager.AddListener( OnEvent );
 			m_processManager.Init();
 
@@ -80,7 +81,7 @@ namespace ProcessCaddy
 			}  
 			else  
 			{  
-				listView1.Items[ index ].SubItems[ 1 ] = new ListViewItem.ListViewSubItem( listView1.Items[ index ], status.ToString() );
+				listView1.Items[ index ].SubItems[ 2 ] = new ListViewItem.ListViewSubItem( listView1.Items[ index ], status.ToString() );
 			}  
 		} 
 		private void OnEvent( string evt )
@@ -91,7 +92,8 @@ namespace ProcessCaddy
 				{
 					Database.Entry entry = m_processManager.GetEntryAtIndex( i );
 					ListViewItem listitem = new ListViewItem( entry.name );
-					listitem.SubItems.Add( "Idle" );
+                    listitem.SubItems.Add(entry.sched.startTime.ToString());
+                    listitem.SubItems.Add( "Idle" );
 					listView1.Items.Add( listitem );
 				}
 
