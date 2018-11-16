@@ -257,16 +257,12 @@ namespace ProcessCaddy
             //TESTCODE
 
             // find the process that should be starting now
-            int currentTime = GetCurTime();
+            int nearestStartTimeIndex = FindCurrentScheduledProcess();
 
-            for(int i = 0; i < m_processList.Count; i++)
+            if(nearestStartTimeIndex != -1)
             {
-                if((m_processList[i].sched.startTime < currentTime) && (m_processList[i].sched.endTime > currentTime))
-                {
-                    Start(i);
-                    m_curProcessIndex = i;
-                    break;
-                }
+                Start(nearestStartTimeIndex);
+                m_curProcessIndex = nearestStartTimeIndex;
             }
 
 			//for (int i = 0; i < m_processList.Count; i++)
@@ -326,8 +322,6 @@ namespace ProcessCaddy
 
         public void CheckSchedule()
         {
-            int currentTime = GetCurTime();
-
             // reload the config file to check for changed schedules
             if (m_database.Load("config.json"))
             {
@@ -343,18 +337,18 @@ namespace ProcessCaddy
                 }
             }
 
-            if ((m_processList[m_curProcessIndex].sched.startTime > currentTime) || (m_processList[m_curProcessIndex].sched.endTime < currentTime))
-            {
-                Stop(m_curProcessIndex);
+            // find the process that should be running at this time
+            int nearestStartTimeIndex = FindCurrentScheduledProcess();
 
-                for (int i = 0; i < m_processList.Count; i++)
+
+            if (nearestStartTimeIndex != -1)
+            {
+                // if it isn't already running, stop the old one and start the new one
+                if (nearestStartTimeIndex != m_curProcessIndex)
                 {
-                    if ((m_processList[i].sched.startTime < currentTime) && (m_processList[i].sched.endTime > currentTime))
-                    {
-                        Start(i);
-                        m_curProcessIndex = i;
-                        break;
-                    }
+                    Stop(m_curProcessIndex);
+                    Start(nearestStartTimeIndex);
+                    m_curProcessIndex = nearestStartTimeIndex;
                 }
             }
 
@@ -393,7 +387,28 @@ namespace ProcessCaddy
 
         int GetCurTime()
         {
-            return System.DateTime.Now.Second;
+            return System.DateTime.Now.Hour;
+        }
+
+        int FindCurrentScheduledProcess()
+        {
+            int currentTime = GetCurTime();
+
+            int nearestStartTimeIndex = -1;
+            for (int i = 0; i < m_processList.Count; i++)
+            {
+                if (m_processList[i].sched.startTime <= currentTime)
+                {
+                    if ((nearestStartTimeIndex == -1) ||
+                    (m_processList[i].sched.startTime > m_processList[nearestStartTimeIndex].sched.startTime))
+                    {
+                        nearestStartTimeIndex = i;
+                    }
+
+                }
+            }
+
+            return nearestStartTimeIndex;
         }
 	}
 
