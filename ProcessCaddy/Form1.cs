@@ -70,17 +70,18 @@ namespace ProcessCaddy
 
 		}
 
-		delegate void SetTextCallback( int index, ProcessManager.Status status );
+		delegate void SetTextCallback( int index, ProcessManager.Status status , int startTime);
 
-		private void SetSubItemText( int index, ProcessManager.Status status )  
+		private void SetSubItemText( int index, ProcessManager.Status status , int startTime)  
 		{  
 			if ( this.listView1.InvokeRequired )  
 			{     
 				SetTextCallback d = new SetTextCallback( SetSubItemText );  
-				this.Invoke( d, new object[] { index, status } ); 
+				this.Invoke( d, new object[] { index, status , startTime} ); 
 			}  
 			else  
 			{  
+                listView1.Items[ index ].SubItems[ 1 ] = new ListViewItem.ListViewSubItem( listView1.Items[ index ], startTime.ToString() );
 				listView1.Items[ index ].SubItems[ 2 ] = new ListViewItem.ListViewSubItem( listView1.Items[ index ], status.ToString() );
 			}  
 		} 
@@ -105,7 +106,8 @@ namespace ProcessCaddy
 				for ( int i = 0; i < m_processManager.Count; i++ )
 				{
 					ProcessManager.Status status = m_processManager.GetProcessStatus( i );
-					SetSubItemText( i, status );
+                    int startTime = m_processManager.GetStartTime(i);
+					SetSubItemText( i, status , startTime);
 				}
 			}
 

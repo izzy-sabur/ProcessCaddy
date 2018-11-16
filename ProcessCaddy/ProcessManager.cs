@@ -63,6 +63,15 @@ namespace ProcessCaddy
 			return Status.Running;
 		}
 
+        public int GetStartTime(int index)
+        {
+            if (index < 0 || index >= m_processList.Count)
+            {
+                return -1;
+            }
+
+            return m_processList[index].sched.startTime;
+        }
 		public bool Init()
 		{
 			if (!m_database.Load("config.json"))
@@ -89,8 +98,7 @@ namespace ProcessCaddy
 
 		public void Update()
 		{
-			m_heartbeatMonitor.Update();
-
+            m_heartbeatMonitor.Update();
 		}
 
 		public Database.Entry GetEntryAtIndex(int index)
@@ -320,6 +328,21 @@ namespace ProcessCaddy
         {
             int currentTime = GetCurTime();
 
+            // reload the config file to check for changed schedules
+            if (m_database.Load("config.json"))
+            {
+                foreach (Database.Entry entry in m_database.Entries)
+                {
+                    foreach (ProcessEntry proc in m_processList)
+                    {
+                        if(proc.name == entry.name)
+                        {
+                            proc.sched = entry.sched;
+                        }
+                    }
+                }
+            }
+
             if ((m_processList[m_curProcessIndex].sched.startTime > currentTime) || (m_processList[m_curProcessIndex].sched.endTime < currentTime))
             {
                 Stop(m_curProcessIndex);
@@ -334,6 +357,8 @@ namespace ProcessCaddy
                     }
                 }
             }
+
+            m_onEvent?.Invoke("StatusUpdated");
         }
 		#endregion
 
