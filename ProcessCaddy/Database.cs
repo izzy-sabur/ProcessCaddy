@@ -10,7 +10,7 @@ namespace ProcessCaddy
 	{
         public struct ScheduleInfo
         {
-            public int startTime, endTime;
+            public int startTime;
         }
 
 		public struct Entry

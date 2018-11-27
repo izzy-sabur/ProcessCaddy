@@ -5,8 +5,7 @@
 		"args":"-n 10 8.8.8.8",
 		"sched":
 		{
-			"startTime":0,
-			"endTime":29
+			"startTime":0
 		}
 	},
 	{
@@ -15,8 +14,7 @@
 		"args":"-n 5 8.8.4.4",
 		"sched":
 		{
-			"startTime":30,
-			"endTime":59
+			"startTime":30
 		}
 	}
 ]
